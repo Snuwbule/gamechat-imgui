@@ -36,7 +36,7 @@ int CALLBACK WinMain(
 	ImGui_ImplWin32_EnableDpiAwareness();
 	WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Standalone", nullptr };
 	::RegisterClassExW(&wc);
-	HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX9 Example", WS_OVERLAPPEDWINDOW, 100, 100, 50, 50, nullptr, nullptr, wc.hInstance, nullptr);
+	HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Chat", WS_OVERLAPPEDWINDOW, 100, 100, 50, 50, nullptr, nullptr, wc.hInstance, nullptr);
 	SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE);
 	// Initialize Direct3D
 	if (!CreateDeviceD3D(hwnd))
@@ -53,9 +53,7 @@ int CALLBACK WinMain(
 
 	// Show the window
 	::ShowWindow(hwnd, SW_HIDE);
-
 	::UpdateWindow(hwnd);
-	SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE);
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -98,7 +96,7 @@ int CALLBACK WinMain(
 	messages.clear();
 	bot.on_message_create([&bot, &messages](const dpp::message_create_t& event) {
 		
-		if (event.msg.author.is_bot()) {return;}
+		//if (event.msg.author.is_bot()) {return;}
 		std::string result = event.msg.author.username;
 		result.append(": ");
 		result.append(event.msg.content);
@@ -155,9 +153,6 @@ int CALLBACK WinMain(
 				if (ImGui::InputText(" ", usrChat, 512, ImGuiInputTextFlags_EnterReturnsTrue)) {
 					dpp::message msg(channelID, usrChat);
 					bot.message_create(msg);
-					std::string result = "You: ";
-					result.append(usrChat);
-					messages.push_back(result);
 					ImGui::SetKeyboardFocusHere(-1);
 					strcpy_s(usrChat, "");
 				}
@@ -165,9 +160,6 @@ int CALLBACK WinMain(
 				if (ImGui::Button("Send")) {
 					dpp::message msg(channelID, usrChat);
 					bot.message_create(msg);
-					std::string result = "You: ";
-					result.append(usrChat);
-					messages.push_back(result);
 					ImGui::SetKeyboardFocusHere(-1);
 					strcpy_s(usrChat, "");
 				}
