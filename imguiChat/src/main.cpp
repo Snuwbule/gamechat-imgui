@@ -59,7 +59,7 @@ int CALLBACK WinMain(
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+	//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 	
 	io.Fonts->AddFontFromFileTTF(fontName.c_str(), fontSize);
@@ -74,7 +74,7 @@ int CALLBACK WinMain(
 	{
 		style.WindowRounding = 0.0f;
 		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-		style.FrameRounding = 0.0f;
+		style.FrameRounding = data["Roundness"]; 
 	}
 
 	// Setup Platform/Renderer backends
@@ -85,7 +85,7 @@ int CALLBACK WinMain(
 	//Data
 	const std::string BOT_TOKEN = data["TOKEN"];
 	dpp::snowflake channelID = data["GUILD"];
-
+	bool styleConfig = false;
 	// Main loop
 	bool running = true;
 	bool loggedIn = false;
@@ -104,7 +104,7 @@ int CALLBACK WinMain(
 	});
 
 	bot.start();
-
+	
 	
 	while (running)
 	{
@@ -136,13 +136,26 @@ int CALLBACK WinMain(
 		ImGui::NewFrame();
 		if (running)
 		{
+
+			if (styleConfig)
+				ImGui::ShowStyleEditor();
+
 			ImGui::Begin("Chat", &running, ImGuiWindowFlags_NoScrollbar
-				| ImGuiWindowFlags_NoScrollWithMouse);
+				| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_MenuBar);
+			ImGui::BeginMenuBar();
+			if (ImGui::BeginMenu("Config")) {
+				if (ImGui::MenuItem("Style Config")) {
+					styleConfig = !styleConfig;
+				}
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
+
 			{
 				ImGui::BeginChild("rawr", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
 				//chat renderer
 				for (size_t i = 0; i < messages.size(); i++) {
-					ImGui::Text(messages[i].c_str());
+					ImGui::TextWrapped(messages[i].c_str());
 				}
 				//auto scroll
 				if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())

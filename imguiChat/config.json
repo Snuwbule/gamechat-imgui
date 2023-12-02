@@ -2,5 +2,6 @@
   "TOKEN": "TOKEN",
   "GUILD": ROOM ID,
   "Font": "NotoSans.ttf",
-  "Size": 16
+  "Size": 16,
+  "Roundness": 4.0
 }
