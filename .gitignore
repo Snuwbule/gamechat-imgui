@@ -2,3 +2,5 @@
 binx64/
 intermediatex64/
 /imguiChat/imgui.ini
+*.aps
+imguiChat/config.json

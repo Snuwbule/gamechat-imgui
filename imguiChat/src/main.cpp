@@ -1,15 +1,15 @@
-// as of writing this. it's currently 1:25AM
-
-
 #include "dpp/dpp.h"
+#include "Windows.h"
+#include <mmsystem.h>
 #include <iostream>
 #include <vector>
-#include "Windows.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_dx9.h"
 #include "imgui/imgui_impl_win32.h"
 #include <d3d9.h>
 #include <tchar.h>
+
+#pragma comment(lib, "winmm.lib")
 
 
 // Data
@@ -24,14 +24,16 @@ void CleanupDeviceD3D();
 void ResetDevice();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+void Log(const char* msg) {
+	printf_s("[LOG] %s\n", msg);
+}
+
+
 // Main code
-int CALLBACK WinMain(
-	_In_ HINSTANCE hInstance,
-	_In_ HINSTANCE hPrevInstance,
-	_In_ LPSTR lpCmdLine,
-	_In_ int nCmdShow
-)
+int main()
 {
+	Log("Creating Window");
+
 	// Create application window
 	ImGui_ImplWin32_EnableDpiAwareness();
 	WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Standalone", nullptr };
@@ -39,12 +41,17 @@ int CALLBACK WinMain(
 	HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Chat", WS_OVERLAPPEDWINDOW, 100, 100, 50, 50, nullptr, nullptr, wc.hInstance, nullptr);
 	SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE);
 	// Initialize Direct3D
+	Log("Created Window");
+	Log("Creating Direct3D 9");
+
 	if (!CreateDeviceD3D(hwnd))
 	{
 		CleanupDeviceD3D();
 		::UnregisterClassW(wc.lpszClassName, wc.hInstance);
 		return 1;
 	}
+	Log("Created Direct3D 9");
+	Log("Reading config.json");
 	//json
 	std::ifstream file("config.json");
 	dpp::json data = dpp::json::parse(file);
@@ -52,8 +59,10 @@ int CALLBACK WinMain(
 	int fontSize = data["Size"];
 
 	// Show the window
+	Log("Hide host window");
 	::ShowWindow(hwnd, SW_HIDE);
 	::UpdateWindow(hwnd);
+	Log("Setup Dear ImGui context");
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -86,6 +95,8 @@ int CALLBACK WinMain(
 	const std::string BOT_TOKEN = data["TOKEN"];
 	dpp::snowflake channelID = data["GUILD"];
 	bool styleConfig = false;
+	bool isFocused = true;
+
 	// Main loop
 	bool running = true;
 	bool loggedIn = false;
@@ -94,20 +105,31 @@ int CALLBACK WinMain(
 	dpp::cluster bot(BOT_TOKEN.c_str(), dpp::i_default_intents | dpp::i_message_content);
 	std::vector<std::string> messages = {"Test"};
 	messages.clear();
-	bot.on_message_create([&bot, &messages](const dpp::message_create_t& event) {
+	bot.on_message_create([&bot, &messages, &isFocused](const dpp::message_create_t& event) {
 		
 		//if (event.msg.author.is_bot()) {return;}
 		std::string result = event.msg.author.username;
 		result.append(": ");
 		result.append(event.msg.content);
 		messages.push_back(result);
+		if (isFocused == false) {
+			PlaySound(TEXT("notif.wav"), NULL, SND_FILENAME | SND_ASYNC);
+			Log("Notification Played");
+		}
+		
 	});
-
+	Log("Connecting to Discord");
 	bot.start();
-	
-	
+	Log("Connected to Discord");
+	Log("Show ImGui window");
 	while (running)
 	{
+		if (GetActiveWindow()) {
+			isFocused = true;
+		}
+		else {
+			isFocused = false;
+		}
 		// Poll and handle messages (inputs, window resize, etc.)
 		// See the WndProc() function below for our to dispatch events to the Win32 backend.
 		MSG msg;
@@ -168,6 +190,7 @@ int CALLBACK WinMain(
 					bot.message_create(msg);
 					ImGui::SetKeyboardFocusHere(-1);
 					strcpy_s(usrChat, "");
+					Log("Message Send");
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Send")) {
@@ -175,6 +198,7 @@ int CALLBACK WinMain(
 					bot.message_create(msg);
 					ImGui::SetKeyboardFocusHere(-1);
 					strcpy_s(usrChat, "");
+					Log("Message Send");
 				}
 			}
 			ImGui::End();
